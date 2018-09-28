@@ -14,7 +14,7 @@ import scalafx.scene.input.MouseEvent
 import scalafx.scene.control._
 import scalafx.scene.control.ButtonBar.ButtonData
 import scalafx.Includes._
-import scalafx.event.ActionEvent
+import scalafx.event.{ ActionEvent, EventHandler }
 import scalafx.embed.swing.SwingFXUtils 
 
 import java.awt.Toolkit
@@ -41,18 +41,17 @@ object ContentNoImage {
   }
 }
 
-object TopPanel {
+class TopPanel {
+// (onPasteFromClipboard: ActionEvent ) {
   def onPasteFromClipboard:Unit = {
     // this.content.text = "Loaded"
   }
 
-  def get = new BorderPane() {
+  def get = new BorderPane {
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
     left = new Button("Paste From Clipboard") {
-      onAction = handle {
-        onPasteFromClipboard
-      }
+      onAction = handle { onPasteFromClipboard }
     }
     right = new Text {
       text = "Please Load the Image"
@@ -64,44 +63,53 @@ object TopPanel {
 
 object CurrentImage {
 
+  var bufferedImage: Option[BufferedImage] = None
+
+  def fromClipboard: Unit = {
+    try {
+      val clipboard:Clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
+      bufferedImage = Some(clipboard.getData(DataFlavor.imageFlavor).asInstanceOf[BufferedImage])
+    } catch {
+      case _: Throwable => 
+    }
+  }
+ 
+  def save(f: File) = {
+    bufferedImage.map(bim => ImageIO.write(bim, "jpg", f))
+  }
+
   def getImageView: ImageView = {
-    // val url: URL = getClass().getResource("/no_image.svg");
-    //val image: Image = ImageIO.read(url);
-    //new ImageView(image)
-    val clipboard:Clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-
-   
-      //Get data from clipboard and assign it to an image.
-      //clipboard.getData() returns an object, so we need to cast it to a BufferdImage.
-      val bufferedImage = clipboard.getData(DataFlavor.imageFlavor).asInstanceOf[BufferedImage]
-      // file that we'll save to disk.
-      val file: File = new File("d:\\src\\_a_dev\\output.jpg");
-      //class to write image to disk.  You specify the image to be saved, its type,
-      // and then the file in which to write the image data.
-      ImageIO.write(bufferedImage, "jpg", file);
-      
-      val scalafxImage = SwingFXUtils.toFXImage(bufferedImage, null);
-      new ImageView { image = scalafxImage }
+    if (bufferedImage.isDefined) {
+      new ImageView { image = SwingFXUtils.toFXImage(bufferedImage.get, null) }
+    } else {
+      ContentNoImage.getImageView
+    }
   }
 
-  def get = new HBox {
-    padding = Insets(50, 80, 50, 80)
-    alignment = Pos.Center
-    children = Seq( getImageView )
+  def get = new BorderPane {
+    padding = Insets(10, 10, 10, 10)  
+    // alignment = Pos.Center
+    style = "-fx-background-color: #822"
+    center = new ScrollPane {
+      content = getImageView
+    }
   }
 
+  fromClipboard
 }
 
 object QuickImageHighlight extends JFXApp {
 
+  // def loadFromClipboard(event: EventAction):Unit = {}
+  val topPanel = new TopPanel()
+  
   stage = new PrimaryStage {
-    //    initStyle(StageStyle.Unified)
     title = "Please Select Image"
     scene = new Scene {
-      fill = Color.rgb(38, 38, 38)
-      root = new BorderPane() {
-        center =  CurrentImage.get // ContentNoImage.get
-        top = TopPanel.get
+      root = new BorderPane {
+        style = "-fx-background-color: #333"
+        center = CurrentImage.get
+        top = topPanel.get
       }
     }
   }
