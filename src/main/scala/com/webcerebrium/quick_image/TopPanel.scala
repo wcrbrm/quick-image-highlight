@@ -9,6 +9,49 @@ import scalafx.event.{ ActionEvent, EventHandler }
 import scalafx.scene.control._
 import scalafx.Includes._
 
+trait TopPanelTrait {
+  def get:BorderPane
+}
+
+case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait {
+
+  val btnPaste = new Button("Paste From Clipboard") { 
+    onAction = handle { 
+        CurrentImage.fromClipboard 
+        onUpdate()
+    }
+  }
+
+  override def get = new BorderPane {
+    style = "-fx-background-color: #eee"
+    padding = Insets(10, 10, 10, 10)
+    left = new HBox {
+        children = btnPaste
+    }
+    right = new Text {
+        text = "Please Load the Image"
+        style = "-fx-font: normal 14px sans-serif"
+        fill = Color.rgb(0, 0, 0)
+    }
+  }
+}
+
+case class TopPanelWithImage(onUpdate: () => Unit) extends TopPanelTrait {
+  val btnReset = new Button("Reset") { 
+    onAction = handle { 
+        CurrentImage.reset 
+        onUpdate()
+    }
+  }
+  override def get = new BorderPane {
+    style = "-fx-background-color: #eee"
+    padding = Insets(10, 10, 10, 10)
+    left = new HBox {
+        children = btnReset
+    }
+  }
+}
+
 class TopPanel(onUpdate: () => Unit) {
 
   def updateMode: Unit = {
@@ -16,27 +59,11 @@ class TopPanel(onUpdate: () => Unit) {
     println("topPanel.updating mode " + flag.toString)
   }
 
-  val btnPaste = new Button("Paste From Clipboard") { 
-    onAction = handle { CurrentImage.fromClipboard }
-    visible = false
-  }
-  val btnReset = new Button("Reset") { 
-    onAction = handle { CurrentImage.reset }
-    visible = true
-  }
-  
-
-  def get = new BorderPane {
-    style = "-fx-background-color: #eee"
-    padding = Insets(10, 10, 10, 10)
-    left = new HBox {
-      children = List(btnPaste, btnReset)
-    }
-    right = new Text {
-      text = "Please Load the Image"
-      style = "-fx-font: normal 14px sans-serif"
-      fill = Color.rgb(0, 0, 0)
-      visible = false
+  def get:BorderPane = {
+    if (CurrentImage.isPresent) {
+      TopPanelWithImage(onUpdate).get 
+    } else {
+      TopPanelNoImage(onUpdate).get
     }
   }
 }

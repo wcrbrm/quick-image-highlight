@@ -19,8 +19,7 @@ import scalafx.event.{ ActionEvent, EventHandler }
 object QuickImageHighlight extends JFXApp {
 
   def updateViews = {
-    // update top panel and content
-    topPanel.updateMode
+    borderPane.top = topPanel.get
     borderPane.center = CurrentImage.get
   }
 
