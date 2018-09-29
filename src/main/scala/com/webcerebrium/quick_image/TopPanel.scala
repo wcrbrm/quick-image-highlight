@@ -13,6 +13,7 @@ import javafx.{scene => jfxs}
 
 trait TopPanelTrait {
   def get:BorderPane
+  def getMode:String
 }
 
 case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait {
@@ -24,6 +25,7 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait {
     }
   }
 
+  override def getMode:String  = ""
   override def get = new BorderPane {
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
@@ -42,7 +44,6 @@ case class TopPanelWithImage(onUpdate: () => Unit) extends TopPanelTrait {
 
   var drawingMode = "crop"
   val radioToggleGroup = new ToggleGroup
-  def getMode:String = radioToggleGroup.selectedToggle().asInstanceOf[jfxsc.RadioButton].text()
   def onUpdateMode = { println("drawing mode changed to " + getMode); }
   
   val btnReset = new Button("Reset") { 
@@ -56,7 +57,8 @@ case class TopPanelWithImage(onUpdate: () => Unit) extends TopPanelTrait {
     style = "-fx-background-color: #faa; -fx-cursor: pointer"
     onAction = handle { println("Consider All Saved") }
   }
-
+  
+  override def getMode:String = radioToggleGroup.selectedToggle().asInstanceOf[jfxsc.RadioButton].text()
   override def get = new BorderPane {
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
