@@ -5,7 +5,7 @@ import scalafx.geometry.{ Insets, Pos }
 import scalafx.scene.image.{ Image, ImageView }
 import scalafx.scene.layout.{ BorderPane, HBox, VBox }
 import scalafx.scene.control._
-import java.awt.Toolkit
+import java.awt.{Toolkit, Graphics2D}
 import java.awt.datatransfer.{ Clipboard, DataFlavor, UnsupportedFlavorException }
 import java.awt.image.BufferedImage
 import scalafx.embed.swing.SwingFXUtils 
@@ -31,6 +31,10 @@ object CurrentImage {
 
   def getImageView: ImageView = {
     if (bufferedImage.isDefined) {
+
+      val g2d:Graphics2D = bufferedImage.get.createGraphics
+      g2d.fillRect(0, 0, 200, 200)
+
       new ImageView { image = SwingFXUtils.toFXImage(bufferedImage.get, null) }
     } else {
       ContentNoImage.getImageView
