@@ -8,6 +8,11 @@ import scalafx.scene.layout.{ FlowPane, BorderPane, HBox, VBox }
 import scalafx.event.{ ActionEvent, EventHandler }
 import scalafx.scene.control._
 import scalafx.Includes._
+
+import java.awt.{Toolkit}
+import java.awt.datatransfer.{ Clipboard, DataFlavor, UnsupportedFlavorException }
+
+import java.io.File
 import javafx.scene.{control => jfxsc, text => jfxst}
 import javafx.{scene => jfxs}
 
@@ -16,12 +21,25 @@ trait TopPanelTrait {
   def getMode:String
 }
 
-case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait {
 
-  val btnPaste = new Button("Paste From Clipboard") { 
+case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with ImageChoser {
+
+  val btnPaste = new Button("From Clipboard") { 
     onAction = handle { 
         CurrentImage.fromClipboard 
         onUpdate()
+    }
+  }
+
+  val btnOpenDialog = new Button("From Local File") {
+    onAction = handle {
+      val imageFile: Option[File] = selectImage("Please select local image")
+      if (imageFile.isDefined) {
+        CurrentImage.fromFile(imageFile.get)
+        onUpdate()
+      } else {
+        println("File not selected")
+      }
     }
   }
 
@@ -29,13 +47,8 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait {
   override def get = new BorderPane {
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
-    left = new HBox {
-        children = btnPaste
-    }
-    right = new Text {
-        text = "Please Load the Image"
-        style = "-fx-font: normal 14px sans-serif"
-        fill = Color.rgb(0, 0, 0)
+    center = new HBox {
+        children = List( btnOpenDialog, btnPaste )
     }
   }
 }

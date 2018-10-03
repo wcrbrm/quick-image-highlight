@@ -19,9 +19,20 @@ object CurrentImage {
   var bufferedImage: Option[BufferedImage] = None
 
   def fromClipboard: Unit = {
-    Try {
+    try {
       val clipboard:Clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
       bufferedImage = Some(clipboard.getData(DataFlavor.imageFlavor).asInstanceOf[BufferedImage])
+    } catch {
+      // case java.awt.datatransfer.UnsupportedFlavorException: Image
+      case e: Exception => println("CLIPBOARD ERROR: " + e.toString)
+    }
+  }
+
+  def fromFile(f: File) = {
+    try {
+      bufferedImage = Some(ImageIO.read(f));
+    } catch {
+      case e: Exception => println("FILE ERROR: " + e.toString)
     }
   }
 
