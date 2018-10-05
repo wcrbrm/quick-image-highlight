@@ -30,6 +30,8 @@ object QuickImageHighlight extends JFXApp {
     top = topPanel.get
   }
 
+  CurrentImage.onUpdate = () => { borderPane.center = CurrentImage.get }
+
   stage = new PrimaryStage {
     title = "Please Select Image"
     scene = new Scene { root = borderPane }
