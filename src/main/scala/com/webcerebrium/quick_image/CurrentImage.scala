@@ -12,9 +12,10 @@ import javafx.geometry.Point2D
 import javafx.scene.input.MouseEvent
 import javafx.event.EventHandler
 
-import java.awt.{Toolkit, Graphics2D, RenderingHints, BasicStroke}
+import java.awt.{Toolkit, Graphics2D, RenderingHints, BasicStroke, Polygon}
 import java.awt.datatransfer.{ Clipboard, DataFlavor, UnsupportedFlavorException }
 import java.awt.image.BufferedImage
+import java.awt.geom._
 import scalafx.embed.swing.SwingFXUtils 
 
 import java.io.{File, IOException }
@@ -50,6 +51,33 @@ object CurrentImage {
   def isPresent = bufferedImage.isDefined
   def save(f: File) = { bufferedImage.map(bim => ImageIO.write(bim, "jpg", f)) }
 
+  def drawArrow(g2d: Graphics2D, x1: Int, y1: Int, x2: Int, y2: Int ):Unit = {
+    val arrowPolygon = new Polygon
+    arrowPolygon.addPoint(-12,1)
+    arrowPolygon.addPoint(3,1)
+    arrowPolygon.addPoint(3,3)
+    arrowPolygon.addPoint(12,0)
+    arrowPolygon.addPoint(3,-3)
+    arrowPolygon.addPoint(3,-1)
+    arrowPolygon.addPoint(-12,-1)
+
+    val midPoint = new Point2D((x1 + x2) / 2, (y1 + y2) / 2)
+    val rotate = Math.atan2(y2 - y1, x2 - x1);
+
+    val tx = new AffineTransform
+    // tx.setToIdentity
+    tx.translate(midPoint.getX, midPoint.getY);
+
+    val ptDistance = Math.sqrt( (x2 - x1)*(x2 - x1) + (y2 - y1) * (y2 - y1))
+    val scale = ptDistance / 24.0; // 12 because it's the length of the arrow polygon.
+    tx.scale(scale, scale);
+    tx.rotate(rotate);
+
+    val shape = tx.createTransformedShape(arrowPolygon);
+    g2d.fill(shape)
+
+  }
+
   def applyTool(p1: Point2D, p2: Point2D) = {
      val minX = Math.min(p1.getX, p2.getX).toInt
      val minY = Math.min(p1.getY, p2.getY).toInt
@@ -57,7 +85,7 @@ object CurrentImage {
      val maxY = Math.max(p1.getY, p2.getY).toInt
 
      println("Apply tool: " + mode + ", p1=" + p1.toString + ", p2=" + p2.toString)
-     
+
      val g2d:Graphics2D = bufferedImage.get.createGraphics
      g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
      g2d.setColor(java.awt.Color.red)
@@ -68,7 +96,7 @@ object CurrentImage {
      } else if (mode == "LINE") {
         g2d.drawLine(p1.getX.toInt, p1.getY.toInt, p2.getX.toInt, p2.getY.toInt)
      } else if (mode == "ARROW") {
-        // TODO:
+        drawArrow(g2d, p1.getX.toInt, p1.getY.toInt, p2.getX.toInt, p2.getY.toInt)
      } else if (mode == "BOX") {
         g2d.drawRect(minX, minY, maxX - minX + 1, maxY - minY + 1)
      }
