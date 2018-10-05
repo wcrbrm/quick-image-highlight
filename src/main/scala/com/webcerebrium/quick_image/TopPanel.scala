@@ -53,11 +53,10 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
   }
 }
 
-case class TopPanelWithImage(onUpdate: () => Unit) extends TopPanelTrait {
+case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Unit) extends TopPanelTrait {
 
   var drawingMode = "crop"
   val radioToggleGroup = new ToggleGroup
-  def onUpdateMode = { println("drawing mode changed to " + getMode); }
   
   val btnReset = new Button("Reset") { 
     style = "-fx-background-color: #fff"
@@ -80,19 +79,19 @@ case class TopPanelWithImage(onUpdate: () => Unit) extends TopPanelTrait {
         new RadioButton("CROP") {
             toggleGroup = radioToggleGroup
             selected = true
-            onAction = handle { onUpdateMode }
+            onAction = handle { onUpdateMode(getMode) }
         },
         new RadioButton("LINE") {
             toggleGroup = radioToggleGroup
-            onAction = handle { onUpdateMode }
+            onAction = handle { onUpdateMode(getMode) }
         },
         new RadioButton("ARROW") {
             toggleGroup = radioToggleGroup
-            onAction = handle { onUpdateMode }
+            onAction = handle { onUpdateMode(getMode) }
         },
         new RadioButton("BOX") {
             toggleGroup = radioToggleGroup
-            onAction = handle { onUpdateMode }
+            onAction = handle { onUpdateMode(getMode) }
         }
       )
     }
@@ -102,7 +101,7 @@ case class TopPanelWithImage(onUpdate: () => Unit) extends TopPanelTrait {
   }
 }
 
-class TopPanel(onUpdate: () => Unit) {
+class TopPanel(onUpdate: () => Unit, onUpdateMode: (String) => Unit) {
 
   def updateMode: Unit = {
     val flag:Boolean = CurrentImage.isPresent
@@ -111,7 +110,7 @@ class TopPanel(onUpdate: () => Unit) {
 
   def get:BorderPane = {
     if (CurrentImage.isPresent) {
-      TopPanelWithImage(onUpdate).get 
+      TopPanelWithImage(onUpdate, onUpdateMode).get 
     } else {
       TopPanelNoImage(onUpdate).get
     }

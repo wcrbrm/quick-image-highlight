@@ -23,14 +23,17 @@ object QuickImageHighlight extends JFXApp {
     borderPane.center = CurrentImage.get
   }
 
-  val topPanel:TopPanel = new TopPanel(onUpdate = () => updateViews)
+  CurrentImage.onUpdate = () => { borderPane.center = CurrentImage.get }
+  val topPanel:TopPanel = new TopPanel(
+     onUpdate = () => updateViews,
+     onUpdateMode = (mode: String) => { CurrentImage.mode = mode; println("mode updated " + mode) }
+  )
   val borderPane: BorderPane = new BorderPane {
     style = "-fx-background-color: #333"
     center = CurrentImage.get
     top = topPanel.get
   }
 
-  CurrentImage.onUpdate = () => { borderPane.center = CurrentImage.get }
 
   stage = new PrimaryStage {
     title = "Please Select Image"
