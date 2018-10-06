@@ -7,6 +7,7 @@ import scalafx.scene.text.Text
 import scalafx.scene.image.{Image, ImageView}
 import scalafx.scene.layout.{ FlowPane, BorderPane, HBox, VBox }
 import scalafx.event.{ ActionEvent, EventHandler }
+import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
 import scalafx.Includes._
 
@@ -26,6 +27,11 @@ trait TopPanelTrait {
   def getButtonByName(name: String): Option[Button]
 }
 
+case class ModeText(value: String) extends Label(value) {
+  style = "-fx-pref-width: 16px; -fx-font: normal bold 16pt sans-serif"
+  padding = Insets(0, 2, 0, 6)
+  textFill = new LinearGradient(endX = 0,stops = Stops(Cyan, DarkBlue))
+}
 
 case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with ImageChoser {
 
@@ -113,21 +119,29 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
        val QIH_HTTP_ROOT = envOrElse("QIH_HTTP_ROOT", "")
        val QIH_REMOTE_DIR = envOrElse("QIH_REMOTE_DIR", "")
        val QIH_HOST = envOrElse("QIH_HOST", "")
-       val QIH_USERNAME = envOrElse("QIH_USERNAME", "")
+       val QIH_USERNAME = envOrElse("QIH_USERNAME", "root")
        val QIH_PASSWORD = envOrElse("QIH_PASSWORD", "")
-       // TODO: check what is missing and issue alert
 
-       val basename = System.currentTimeMillis + ".png"
-       val remoteFile = QIH_REMOTE_DIR + "/" + basename
-       val link = QIH_HTTP_ROOT + basename
+      if (QIH_HTTP_ROOT.isEmpty || QIH_REMOTE_DIR.isEmpty || QIH_HOST.isEmpty ) {
+        new Alert(AlertType.Error) {
+          initOwner(null)
+          title = "Not Configured"
+          headerText = "Using Sharing function requires env variables"
+          contentText = "please check\nQIH_HTTP_ROOT,\nQIH_REMOTE_DIR,\nQIH_HOST,\nQIH_USERNAME,\nQIH_PASSWORD"
+        }.showAndWait
+      } else {
 
-       val sshOptions = SSHOptions(host = QIH_HOST, username = QIH_USERNAME, password = QIH_PASSWORD )
-       println("Connecting to ssh.. " + QIH_USERNAME + "@" + QIH_HOST)
-       SSH.shellAndFtp(sshOptions) {(ssh, ftp) => {
-         println("Connected to " + QIH_HOST)
-         CurrentImage.upload(ftp, remoteFile)
-         println("Image was uploaded. Link: " + link)
-       }}
+        val basename = System.currentTimeMillis + ".png"
+        val remoteFile = QIH_REMOTE_DIR + "/" + basename
+        val link = QIH_HTTP_ROOT + basename
+        val sshOptions = SSHOptions(host = QIH_HOST, username = QIH_USERNAME, password = QIH_PASSWORD )
+        println("Connecting to ssh.. " + QIH_USERNAME + "@" + QIH_HOST)
+        SSH.shellAndFtp(sshOptions) {(ssh, ftp) => {
+          println("Connected to " + QIH_HOST)
+          CurrentImage.upload(ftp, remoteFile)
+          println("Image was uploaded. Link: " + link)
+        }}
+      }
     }
   }
 
@@ -169,7 +183,12 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
     left = new HBox(0) {
-      children = List( btnCrop, btnLine, btnArrow, btnBox )
+      children = List( 
+        ModeText("1"), btnCrop, 
+        ModeText("2"), btnLine, 
+        ModeText("3"), btnArrow, 
+        ModeText("4"), btnBox
+      )
     }
     right = new HBox(0) {
       children = List(btnCopy, btnSave, btnShare, btnReset)
