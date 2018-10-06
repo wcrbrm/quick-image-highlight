@@ -9,6 +9,7 @@ scalaVersion := "2.12.4"
 
 // Add dependency on ScalaFX library
 libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.144-R12"
+libraryDependencies += "fr.janalyse" %% "janalyse-ssh" % "0.10.3"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-Xcheckinit", "-encoding", "utf8", "-feature")
 

@@ -18,9 +18,10 @@ import java.awt.image.BufferedImage
 import java.awt.geom._
 import scalafx.embed.swing.SwingFXUtils 
 
-import java.io.{File, IOException }
+import java.io.{File, IOException, ByteArrayInputStream, ByteArrayOutputStream }
 import java.net.URL
-import javax.imageio.ImageIO
+import fr.janalyse.ssh._
+import javax.imageio.{ ImageIO, IIOImage, ImageWriter, ImageWriteParam }
 
 // https://www.scala-lang.org/old/node/10356.html
 // https://github.com/holgerbrandl/pasteimages/blob/master/src/img2md/ImageUtils.java
@@ -52,7 +53,32 @@ object CurrentImage {
 
   def reset = { bufferedImage = None }
   def isPresent = bufferedImage.isDefined
-  def save(f: File) = { bufferedImage.map(bim => ImageIO.write(bim, "jpg", f)) }
+  def save(f: File) = { 
+    bufferedImage.map(bim => ImageIO.write(bim, "jpg", f)) 
+  }
+
+  def upload(sftp: SSHFtp, remoteDestination: String) = {
+    bufferedImage.map(bim => {
+      val writer: ImageWriter = ImageIO.getImageWritersByFormatName("png").next
+      val param:ImageWriteParam = writer.getDefaultWriteParam
+      // param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT)
+      // param.setCompressionQuality(0.9f)
+
+      val os = new ByteArrayOutputStream
+      val ios = ImageIO.createImageOutputStream(os)
+      writer.setOutput(ios)
+      writer.write(null, new IIOImage(bim, null, null), param);
+    
+      println("image writer done, length=" + os.toByteArray.length)
+      println("output stream initialized")
+      sftp.putFromStream(new ByteArrayInputStream(os.toByteArray), remoteDestination)
+      println("sftp stream set up")
+
+      writer.dispose
+      os.flush
+      os.close
+    })
+  }
 
   def drawArrow(g2d: Graphics2D, x1: Int, y1: Int, x2: Int, y2: Int ):Unit = {
     val arrowPolygon = new Polygon
@@ -116,7 +142,7 @@ object CurrentImage {
      g2d.setStroke(new BasicStroke(3));
 
      if (mode == "CROP") {
-        bufferedImage = Some(bufferedImage.get.getSubimage(minX, minY, maxX - minY, maxY - minY)) 
+        bufferedImage = Some(bufferedImage.get.getSubimage(minX, minY, maxX - minX, maxY - minY)) 
      } else if (mode == "LINE") {
         g2d.drawLine(p1.getX.toInt, p1.getY.toInt, p2.getX.toInt, p2.getY.toInt)
      } else if (mode == "ARROW") {

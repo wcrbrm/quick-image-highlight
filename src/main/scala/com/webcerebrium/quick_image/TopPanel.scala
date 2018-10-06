@@ -18,6 +18,9 @@ import javafx.scene.{control => jfxsc, text => jfxst}
 import javafx.scene.control.{ToggleButton => JfxToggleBtn}
 import javafx.{scene => jfxs}
 
+import scala.util.Properties.envOrElse
+import fr.janalyse.ssh._
+
 trait TopPanelTrait {
   def get:BorderPane
   def getButtonByName(name: String): Option[Button]
@@ -107,8 +110,24 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
   val btnShare = new Button("Share") { 
     graphic = new ImageView {image = new Image(this, "/share.png")}
     onAction = handle { 
-      // TODO:
-      println("Consider Exported") 
+       val QIH_HTTP_ROOT = envOrElse("QIH_HTTP_ROOT", "")
+       val QIH_REMOTE_DIR = envOrElse("QIH_REMOTE_DIR", "")
+       val QIH_HOST = envOrElse("QIH_HOST", "")
+       val QIH_USERNAME = envOrElse("QIH_USERNAME", "")
+       val QIH_PASSWORD = envOrElse("QIH_PASSWORD", "")
+       // TODO: check what is missing and issue alert
+
+       val basename = System.currentTimeMillis + ".png"
+       val remoteFile = QIH_REMOTE_DIR + "/" + basename
+       val link = QIH_HTTP_ROOT + basename
+
+       val sshOptions = SSHOptions(host = QIH_HOST, username = QIH_USERNAME, password = QIH_PASSWORD )
+       println("Connecting to ssh.. " + QIH_USERNAME + "@" + QIH_HOST)
+       SSH.shellAndFtp(sshOptions) {(ssh, ftp) => {
+         println("Connected to " + QIH_HOST)
+         CurrentImage.upload(ftp, remoteFile)
+         println("Image was uploaded. Link: " + link)
+       }}
     }
   }
 
