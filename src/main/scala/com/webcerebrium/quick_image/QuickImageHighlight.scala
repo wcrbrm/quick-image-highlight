@@ -85,7 +85,7 @@ object QuickImageHighlight extends JFXApp {
     title = "Please Select Image"
     scene = new Scene { 
       root = borderPane
-      alwaysOnTop = true
+      maximized = true
       onKeyPressed = new jfxe.EventHandler[jfxsi.KeyEvent] {
         override def handle(ke: jfxsi.KeyEvent) { onKeyPress(ke) }
       }
