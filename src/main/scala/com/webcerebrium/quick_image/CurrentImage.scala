@@ -13,7 +13,7 @@ import javafx.scene.input.MouseEvent
 import javafx.event.EventHandler
 
 import java.awt.{Toolkit, Graphics2D, RenderingHints, BasicStroke, Polygon}
-import java.awt.datatransfer.{ Clipboard, DataFlavor, UnsupportedFlavorException }
+import java.awt.datatransfer.{ Clipboard, Transferable, DataFlavor, UnsupportedFlavorException }
 import java.awt.image.BufferedImage
 import java.awt.geom._
 import scalafx.embed.swing.SwingFXUtils 
@@ -21,6 +21,9 @@ import scalafx.embed.swing.SwingFXUtils
 import java.io.{File, IOException }
 import java.net.URL
 import javax.imageio.ImageIO
+
+// https://www.scala-lang.org/old/node/10356.html
+// https://github.com/holgerbrandl/pasteimages/blob/master/src/img2md/ImageUtils.java
 
 object CurrentImage {
 
@@ -75,7 +78,28 @@ object CurrentImage {
 
     val shape = tx.createTransformedShape(arrowPolygon);
     g2d.fill(shape)
+  }
 
+  def saveToClipboard = {
+    bufferedImage.map(bim => {
+      
+      val clipboard:Clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
+      clipboard.setContents(new Transferable {
+		    override def isDataFlavorSupported(flavor: DataFlavor):Boolean = {
+			    flavor.equals(DataFlavor.imageFlavor);
+		    }
+		    override def getTransferDataFlavors: Array[DataFlavor]= {
+			    Array(DataFlavor.imageFlavor)
+		    }
+				override def getTransferData(flavor:DataFlavor) = { // throws UnsupportedFlavorException, IOException 
+			    if (flavor == DataFlavor.imageFlavor) {
+				    bim
+			    } else {
+			      throw new UnsupportedFlavorException(flavor)
+          }
+		    }
+	    }, null );
+    })
   }
 
   def applyTool(p1: Point2D, p2: Point2D) = {
@@ -135,7 +159,7 @@ object CurrentImage {
     padding = Insets(10, 10, 10, 10)  
     style = "-fx-background-color: #822"
     center = new ScrollPane {
-      content = getImageView
+      content = if (bufferedImage.isDefined) getImageView else ContentNoImage.get
     }
   }
 

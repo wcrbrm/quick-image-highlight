@@ -16,5 +16,17 @@ trait ImageChoser {
     println("Selected File: " + result)
     if (result != null) Some(result) else None
   }
+  
+  def exportedImage( title: String = ""): Option[File] = {  
+    val chooser = new FileChooser
+    chooser.title = title
+    chooser.getExtensionFilters.addAll(
+      new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+      new FileChooser.ExtensionFilter("PNG", "*.png")
+    )
+    val result = chooser.showSaveDialog(null)
+    println("Selected File: " + result)
+    if (result != null) Some(result) else None
+  }
 
 }

@@ -20,6 +20,6 @@ object ContentNoImage {
   def get = new HBox {
     padding = Insets(50, 80, 50, 80)
     alignment = Pos.Center
-    children = Seq( getImageView )
+    children = Seq( getText )
   }
 }

@@ -4,6 +4,7 @@ import scalafx.geometry.{ Insets, Pos }
 import scalafx.scene.paint.Color._
 import scalafx.scene.paint._
 import scalafx.scene.text.Text
+import scalafx.scene.image.{Image, ImageView}
 import scalafx.scene.layout.{ FlowPane, BorderPane, HBox, VBox }
 import scalafx.event.{ ActionEvent, EventHandler }
 import scalafx.scene.control._
@@ -14,17 +15,19 @@ import java.awt.datatransfer.{ Clipboard, DataFlavor, UnsupportedFlavorException
 
 import java.io.File
 import javafx.scene.{control => jfxsc, text => jfxst}
+import javafx.scene.control.{ToggleButton => JfxToggleBtn}
 import javafx.{scene => jfxs}
 
 trait TopPanelTrait {
   def get:BorderPane
-  def getMode:String
+  def getButtonByName(name: String): Option[Button]
 }
 
 
 case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with ImageChoser {
 
   val btnPaste = new Button("From Clipboard") { 
+    graphic = new ImageView {image = new Image(this, "/paste.png")}
     onAction = handle { 
         CurrentImage.fromClipboard 
         onUpdate()
@@ -32,6 +35,7 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
   }
 
   val btnOpenDialog = new Button("From Local File") {
+    graphic = new ImageView {image = new Image(this, "/open-folder.png")}
     onAction = handle {
       val imageFile: Option[File] = selectImage("Please select local image")
       if (imageFile.isDefined) {
@@ -43,7 +47,16 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
     }
   }
 
-  override def getMode:String  = ""
+  def getButtonByName(name: String): Option[Button] = {
+    if (name == "PASTE") {
+      Some(btnPaste)
+    } else if (name == "OPEN") {
+      Some(btnOpenDialog)
+    } else {
+      None
+    }
+  }
+  
   override def get = new BorderPane {
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
@@ -53,55 +66,102 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
   }
 }
 
-case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Unit) extends TopPanelTrait {
+case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Unit) extends TopPanelTrait with ImageChoser {
 
-  var drawingMode = "crop"
-  val radioToggleGroup = new ToggleGroup
+  var drawingMode = "CROP"
+  val radioToggleGroup = new ToggleGroup {
+    selectedToggle.onChange(
+      (_, oldValue, newValue) => {
+        println( "selected: " + newValue.asInstanceOf[JfxToggleBtn].getText )
+        onUpdateMode(newValue.asInstanceOf[JfxToggleBtn].getText)
+      }
+    )
+  }
   
-  val btnReset = new Button("Reset") { 
-    style = "-fx-background-color: #fff"
+  val btnReset = new Button { 
+    graphic = new ImageView {image = new Image(this, "/power.png")}
     onAction = handle { 
         CurrentImage.reset 
         onUpdate()
     }
   }
   val btnSave = new Button("Save") { 
-    style = "-fx-background-color: #faa; -fx-cursor: pointer"
-    onAction = handle { println("Consider All Saved") }
+    graphic = new ImageView {image = new Image(this, "/save.png")}
+    onAction = handle { 
+      val imageFile: Option[File] = exportedImage("Save as...")
+      if (imageFile.isDefined) {
+        CurrentImage.save(imageFile.get)
+        println("Consider All Saved") 
+      } else {
+        println("Exported file not selected") 
+      }
+    }
+  }
+  val btnCopy = new Button("Copy") { 
+    graphic = new ImageView {image = new Image(this, "/copy.png")}
+    onAction = handle { 
+      CurrentImage.saveToClipboard
+      println("Consider Copied to clipboard") 
+    }
+  }
+  val btnShare = new Button("Share") { 
+    graphic = new ImageView {image = new Image(this, "/share.png")}
+    onAction = handle { 
+      // TODO:
+      println("Consider Exported") 
+    }
+  }
+
+  val btnCrop = new ToggleButton ("CROP") {
+    toggleGroup = radioToggleGroup
+    selected = true
+  }
+  val btnLine = new ToggleButton ("LINE") {
+    toggleGroup = radioToggleGroup
+  }
+  val btnArrow = new ToggleButton ("ARROW") {
+    toggleGroup = radioToggleGroup
+  }
+  val btnBox = new ToggleButton ("BOX") {
+    toggleGroup = radioToggleGroup
+  }
+
+  def getModeButtons = List( btnCrop, btnLine, btnArrow, btnBox )
+  def getModeButton(mode: Int): Option[ToggleButton]= {
+    val btnBar = getModeButtons
+    if (btnBar.size >= mode) Some(btnBar(mode)) else None
   }
   
-  override def getMode:String = radioToggleGroup.selectedToggle().asInstanceOf[jfxsc.RadioButton].text()
+  def getButtonByName(name: String): Option[Button] = {
+    if (name == "SAVE") {
+      Some(btnSave)
+    } else if (name == "COPY") {
+      Some(btnCopy)
+    } else if (name == "SHARE") {
+      Some(btnShare)
+    } else if (name == "RESET") {
+      Some(btnReset)
+    } else {
+      None
+    }
+  }
+  
   override def get = new BorderPane {
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
-    left = new HBox(8) {
-      children = List(
-        new RadioButton("CROP") {
-            toggleGroup = radioToggleGroup
-            selected = true
-            onAction = handle { onUpdateMode(getMode) }
-        },
-        new RadioButton("LINE") {
-            toggleGroup = radioToggleGroup
-            onAction = handle { onUpdateMode(getMode) }
-        },
-        new RadioButton("ARROW") {
-            toggleGroup = radioToggleGroup
-            onAction = handle { onUpdateMode(getMode) }
-        },
-        new RadioButton("BOX") {
-            toggleGroup = radioToggleGroup
-            onAction = handle { onUpdateMode(getMode) }
-        }
-      )
+    left = new HBox(0) {
+      children = List( btnCrop, btnLine, btnArrow, btnBox )
     }
-    right = new HBox(20) {
-      children = List(btnReset, btnSave)
+    right = new HBox(0) {
+      children = List(btnCopy, btnSave, btnShare, btnReset)
     }
   }
 }
 
 class TopPanel(onUpdate: () => Unit, onUpdateMode: (String) => Unit) {
+
+  val noImage = TopPanelNoImage(onUpdate)
+  val withImage = TopPanelWithImage(onUpdate, onUpdateMode)
 
   def updateMode: Unit = {
     val flag:Boolean = CurrentImage.isPresent
@@ -110,9 +170,25 @@ class TopPanel(onUpdate: () => Unit, onUpdateMode: (String) => Unit) {
 
   def get:BorderPane = {
     if (CurrentImage.isPresent) {
-      TopPanelWithImage(onUpdate, onUpdateMode).get 
+      withImage.get 
     } else {
-      TopPanelNoImage(onUpdate).get
+      noImage.get
+    }
+  }
+  def getModeButtons = withImage.getModeButtons
+  def getButton(name: String): Option[Button] = {
+  if (CurrentImage.isPresent) {
+      withImage.getButtonByName(name)
+    } else {
+      noImage.getButtonByName(name)
+    }
+  }
+
+  def getModeButton(mode: Int): Option[ToggleButton] = {
+    if (CurrentImage.isPresent) {
+      withImage.getModeButton(mode)
+    } else {
+      None
     }
   }
 }
