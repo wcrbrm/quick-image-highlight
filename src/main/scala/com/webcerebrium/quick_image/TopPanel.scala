@@ -4,6 +4,7 @@ import scalafx.geometry.{ Insets, Pos }
 import scalafx.scene.paint.Color._
 import scalafx.scene.paint._
 import scalafx.scene.text.Text
+import scalafx.scene.image.{Image, ImageView}
 import scalafx.scene.layout.{ FlowPane, BorderPane, HBox, VBox }
 import scalafx.event.{ ActionEvent, EventHandler }
 import scalafx.scene.control._
@@ -74,22 +75,22 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
   override def get = new BorderPane {
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
-    left = new HBox(8) {
+    left = new HBox(0) {
       children = List(
-        new RadioButton("CROP") {
+        new ToggleButton ("CROP") {
             toggleGroup = radioToggleGroup
             selected = true
             onAction = handle { onUpdateMode(getMode) }
         },
-        new RadioButton("LINE") {
+        new ToggleButton ("LINE") {
             toggleGroup = radioToggleGroup
             onAction = handle { onUpdateMode(getMode) }
         },
-        new RadioButton("ARROW") {
+        new ToggleButton ("ARROW") {
             toggleGroup = radioToggleGroup
             onAction = handle { onUpdateMode(getMode) }
         },
-        new RadioButton("BOX") {
+        new ToggleButton ("BOX") {
             toggleGroup = radioToggleGroup
             onAction = handle { onUpdateMode(getMode) }
         }
