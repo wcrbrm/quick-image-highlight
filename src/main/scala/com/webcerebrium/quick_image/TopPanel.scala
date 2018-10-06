@@ -140,6 +140,15 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
           println("Connected to " + QIH_HOST)
           CurrentImage.upload(ftp, remoteFile)
           println("Image was uploaded. Link: " + link)
+
+          // saving link to the clipboard
+          import javafx.scene.input.{ Clipboard, ClipboardContent }
+          val selection = new ClipboardContent
+          selection.putString(link)
+          Clipboard.getSystemClipboard.setContent(selection)
+          println("Copied to clipboard")
+
+          // TODO: display modal dialog with a link
         }}
       }
     }

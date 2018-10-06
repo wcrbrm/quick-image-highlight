@@ -68,13 +68,13 @@ object CurrentImage {
       val ios = ImageIO.createImageOutputStream(os)
       writer.setOutput(ios)
       writer.write(null, new IIOImage(bim, null, null), param);
-    
+      writer.dispose
+
       println("image writer done, length=" + os.toByteArray.length)
       println("output stream initialized")
       sftp.putFromStream(new ByteArrayInputStream(os.toByteArray), remoteDestination)
       println("sftp stream set up")
 
-      writer.dispose
       os.flush
       os.close
     })
