@@ -107,7 +107,7 @@ object CurrentImage {
     padding = Insets(10, 10, 10, 10)  
     style = "-fx-background-color: #822"
     center = new ScrollPane {
-      content = getImageView
+      content = if (bufferedImage.isDefined) getImageView else ContentNoImage.get
     }
   }
 

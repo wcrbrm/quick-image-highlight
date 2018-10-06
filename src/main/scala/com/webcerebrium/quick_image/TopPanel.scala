@@ -15,11 +15,11 @@ import java.awt.datatransfer.{ Clipboard, DataFlavor, UnsupportedFlavorException
 
 import java.io.File
 import javafx.scene.{control => jfxsc, text => jfxst}
+import javafx.scene.control.{ToggleButton => JfxToggleBtn}
 import javafx.{scene => jfxs}
 
 trait TopPanelTrait {
   def get:BorderPane
-  def getMode:String
 }
 
 
@@ -43,8 +43,7 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
       }
     }
   }
-
-  override def getMode:String  = ""
+  
   override def get = new BorderPane {
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
@@ -56,8 +55,15 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
 
 case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Unit) extends TopPanelTrait {
 
-  var drawingMode = "crop"
-  val radioToggleGroup = new ToggleGroup
+  var drawingMode = "CROP"
+  val radioToggleGroup = new ToggleGroup {
+    selectedToggle.onChange(
+      (_, oldValue, newValue) => {
+        println( "selected: " + newValue.asInstanceOf[JfxToggleBtn].getText )
+        onUpdateMode(newValue.asInstanceOf[JfxToggleBtn].getText)
+      }
+    )
+  }
   
   val btnReset = new Button("Reset") { 
     style = "-fx-background-color: #fff"
@@ -70,31 +76,31 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
     style = "-fx-background-color: #faa; -fx-cursor: pointer"
     onAction = handle { println("Consider All Saved") }
   }
+  val btnCrop = new ToggleButton ("CROP") {
+    toggleGroup = radioToggleGroup
+    selected = true
+  }
+  val btnLine = new ToggleButton ("LINE") {
+    toggleGroup = radioToggleGroup
+  }
+  val btnArrow = new ToggleButton ("ARROW") {
+    toggleGroup = radioToggleGroup
+  }
+  val btnBox = new ToggleButton ("BOX") {
+    toggleGroup = radioToggleGroup
+  }
+
+  def getModeButtons = List( btnCrop, btnLine, btnArrow, btnBox )
+  def getModeButton(mode: Int): Option[ToggleButton]= {
+    val btnBar = getModeButtons
+    if (btnBar.size >= mode) Some(btnBar(mode)) else None
+  }
   
-  override def getMode:String = radioToggleGroup.selectedToggle().asInstanceOf[jfxsc.RadioButton].text()
   override def get = new BorderPane {
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
     left = new HBox(0) {
-      children = List(
-        new ToggleButton ("CROP") {
-            toggleGroup = radioToggleGroup
-            selected = true
-            onAction = handle { onUpdateMode(getMode) }
-        },
-        new ToggleButton ("LINE") {
-            toggleGroup = radioToggleGroup
-            onAction = handle { onUpdateMode(getMode) }
-        },
-        new ToggleButton ("ARROW") {
-            toggleGroup = radioToggleGroup
-            onAction = handle { onUpdateMode(getMode) }
-        },
-        new ToggleButton ("BOX") {
-            toggleGroup = radioToggleGroup
-            onAction = handle { onUpdateMode(getMode) }
-        }
-      )
+      children = List( btnCrop, btnLine, btnArrow, btnBox )
     }
     right = new HBox(20) {
       children = List(btnReset, btnSave)
@@ -104,6 +110,9 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
 
 class TopPanel(onUpdate: () => Unit, onUpdateMode: (String) => Unit) {
 
+  val noImage = TopPanelNoImage(onUpdate)
+  val withImage = TopPanelWithImage(onUpdate, onUpdateMode)
+
   def updateMode: Unit = {
     val flag:Boolean = CurrentImage.isPresent
     println("topPanel.updating mode " + flag.toString)
@@ -111,9 +120,18 @@ class TopPanel(onUpdate: () => Unit, onUpdateMode: (String) => Unit) {
 
   def get:BorderPane = {
     if (CurrentImage.isPresent) {
-      TopPanelWithImage(onUpdate, onUpdateMode).get 
+      withImage.get 
     } else {
-      TopPanelNoImage(onUpdate).get
+      noImage.get
+    }
+  }
+  def getModeButtons = withImage.getModeButtons
+
+  def getModeButton(mode: Int): Option[ToggleButton] = {
+    if (CurrentImage.isPresent) {
+      withImage.getModeButton(mode)
+    } else {
+      None
     }
   }
 }

@@ -10,11 +10,13 @@ import scalafx.scene.paint.Color._
 import scalafx.scene.paint._
 import scalafx.scene.text.Text
 import scalafx.scene.image.{ Image, ImageView }
-import scalafx.scene.input.MouseEvent
+import scalafx.scene.input.{ KeyEvent, MouseEvent }
 import scalafx.scene.control._
 import scalafx.scene.control.ButtonBar.ButtonData
 import scalafx.Includes._
 import scalafx.event.{ ActionEvent, EventHandler }
+import javafx.scene.{control => jfxctrl, input => jfxsi, layout => jfxsl, paint => jfxsp}
+import javafx.{collections => jfxc, event => jfxe, geometry => jfxg, scene => jfxs, util => jfxu}
 
 object QuickImageHighlight extends JFXApp {
 
@@ -35,10 +37,41 @@ object QuickImageHighlight extends JFXApp {
     top = topPanel.get
   }
 
+  def selectMode(modeIndex: Int) = {
+    topPanel.getModeButton(modeIndex).map(b => {
+      CurrentImage.mode = b.getText
+      b.selected = true
+      b.requestFocus
+    })
+  }
+
+  def onKeyPress(ke: jfxsi.KeyEvent) = {
+    if (ke.getCode == jfxsi.KeyCode.DIGIT1) {
+      selectMode(0);  
+    } else if (ke.getCode == jfxsi.KeyCode.DIGIT2) {
+      selectMode(1);  
+    } else if (ke.getCode == jfxsi.KeyCode.DIGIT3) {
+      selectMode(2);  
+    } else if (ke.getCode == jfxsi.KeyCode.DIGIT4) {
+      selectMode(3);
+    } else if (ke.getCode == jfxsi.KeyCode.V && ke.isControlDown) {  
+      println("CTRL+V")
+    } else {
+      println(ke.toString)
+    }
+  }
+
 
   stage = new PrimaryStage {
     icons += new Image("/favicon.png")
     title = "Please Select Image"
-    scene = new Scene { root = borderPane }
+    scene = new Scene { 
+      root = borderPane
+      onKeyPressed = new jfxe.EventHandler[jfxsi.KeyEvent] {
+        override def handle(ke: jfxsi.KeyEvent) { onKeyPress(ke) }
+      }
+    }
   }
+
+  
 }
