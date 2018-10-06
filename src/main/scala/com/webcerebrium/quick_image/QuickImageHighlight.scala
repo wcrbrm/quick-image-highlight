@@ -19,6 +19,7 @@ import scalafx.event.{ ActionEvent, EventHandler }
 object QuickImageHighlight extends JFXApp {
 
   def updateViews = {
+    this.stage.title = if (CurrentImage.bufferedImage.isDefined) "Highlight the most important" else "Please Select Image"
     borderPane.top = topPanel.get
     borderPane.center = CurrentImage.get
   }
@@ -36,6 +37,7 @@ object QuickImageHighlight extends JFXApp {
 
 
   stage = new PrimaryStage {
+    icons += new Image("/favicon.png")
     title = "Please Select Image"
     scene = new Scene { root = borderPane }
   }
