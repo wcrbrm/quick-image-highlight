@@ -45,6 +45,14 @@ object QuickImageHighlight extends JFXApp {
     })
   }
 
+  def triggerButton(name: String) = {
+    topPanel.getButton(name).map(b => {
+      println("button name: " + name)
+      b.requestFocus
+      b.fire
+    })
+  }
+
   def onKeyPress(ke: jfxsi.KeyEvent) = {
     if (ke.getCode == jfxsi.KeyCode.DIGIT1) {
       selectMode(0);  
@@ -54,8 +62,18 @@ object QuickImageHighlight extends JFXApp {
       selectMode(2);  
     } else if (ke.getCode == jfxsi.KeyCode.DIGIT4) {
       selectMode(3);
+    } else if (ke.getCode == jfxsi.KeyCode.ESCAPE) {  
+      triggerButton("RESET")
     } else if (ke.getCode == jfxsi.KeyCode.V && ke.isControlDown) {  
-      println("CTRL+V")
+      triggerButton("PASTE")
+    } else if (ke.getCode == jfxsi.KeyCode.O && ke.isControlDown) {  
+      triggerButton("OPEN")
+    } else if (ke.getCode == jfxsi.KeyCode.C && ke.isControlDown) {  
+      triggerButton("COPY")
+    } else if (ke.getCode == jfxsi.KeyCode.S && ke.isControlDown) {  
+      triggerButton("SAVE")
+    } else if (ke.getCode == jfxsi.KeyCode.ENTER && ke.isControlDown) {  
+      triggerButton("SHARE")
     } else {
       println(ke.toString)
     }
