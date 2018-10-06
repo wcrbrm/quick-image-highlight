@@ -87,11 +87,16 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
   }
   val btnSave = new Button("Save") { 
     graphic = new ImageView {image = new Image(this, "/save.png")}
-    onAction = handle { println("Consider All Saved") }
+    onAction = handle { 
+      println("Consider All Saved") 
+    }
   }
   val btnCopy = new Button("Copy") { 
     graphic = new ImageView {image = new Image(this, "/copy.png")}
-    onAction = handle { println("Consider Copied to clipboard") }
+    onAction = handle { 
+      CurrentImage.saveToClipboard
+      println("Consider Copied to clipboard") 
+    }
   }
   val btnShare = new Button("Share") { 
     graphic = new ImageView {image = new Image(this, "/share.png")}

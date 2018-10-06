@@ -13,13 +13,16 @@ import javafx.scene.input.MouseEvent
 import javafx.event.EventHandler
 
 import java.awt.{Toolkit, Graphics2D, RenderingHints, BasicStroke}
-import java.awt.datatransfer.{ Clipboard, DataFlavor, UnsupportedFlavorException }
-import java.awt.image.BufferedImage
+import java.awt.datatransfer.{ Clipboard, ClipboardOwner, DataFlavor, UnsupportedFlavorException, Transferable }
+import java.awt.image.{ BufferedImage }
 import scalafx.embed.swing.SwingFXUtils 
 
 import java.io.{File, IOException }
 import java.net.URL
 import javax.imageio.ImageIO
+
+// https://www.scala-lang.org/old/node/10356.html
+// https://github.com/holgerbrandl/pasteimages/blob/master/src/img2md/ImageUtils.java
 
 object CurrentImage {
 
@@ -49,6 +52,28 @@ object CurrentImage {
   def reset = { bufferedImage = None }
   def isPresent = bufferedImage.isDefined
   def save(f: File) = { bufferedImage.map(bim => ImageIO.write(bim, "jpg", f)) }
+
+  def saveToClipboard = {
+    bufferedImage.map(bim => {
+      
+      val clipboard:Clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
+      clipboard.setContents(new Transferable {
+		    override def isDataFlavorSupported(flavor: DataFlavor):Boolean = {
+			    flavor.equals(DataFlavor.imageFlavor);
+		    }
+		    override def getTransferDataFlavors: Array[DataFlavor]= {
+			    Array(DataFlavor.imageFlavor)
+		    }
+				override def getTransferData(flavor:DataFlavor) = { // throws UnsupportedFlavorException, IOException 
+			    if (flavor == DataFlavor.imageFlavor) {
+				    bim
+			    } else {
+			      throw new UnsupportedFlavorException(flavor)
+          }
+		    }
+	    }, null );
+    })
+  }
 
   def applyTool(p1: Point2D, p2: Point2D) = {
      val minX = Math.min(p1.getX, p2.getX).toInt
