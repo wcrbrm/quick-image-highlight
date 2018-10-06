@@ -66,7 +66,7 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
   }
 }
 
-case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Unit) extends TopPanelTrait {
+case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Unit) extends TopPanelTrait with ImageChoser {
 
   var drawingMode = "CROP"
   val radioToggleGroup = new ToggleGroup {
@@ -88,7 +88,13 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
   val btnSave = new Button("Save") { 
     graphic = new ImageView {image = new Image(this, "/save.png")}
     onAction = handle { 
-      println("Consider All Saved") 
+      val imageFile: Option[File] = exportedImage("Save as...")
+      if (imageFile.isDefined) {
+        CurrentImage.save(imageFile.get)
+        println("Consider All Saved") 
+      } else {
+        println("Exported file not selected") 
+      }
     }
   }
   val btnCopy = new Button("Copy") { 
@@ -100,7 +106,10 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
   }
   val btnShare = new Button("Share") { 
     graphic = new ImageView {image = new Image(this, "/share.png")}
-    onAction = handle { println("Consider Exported") }
+    onAction = handle { 
+      // TODO:
+      println("Consider Exported") 
+    }
   }
 
   val btnCrop = new ToggleButton ("CROP") {
