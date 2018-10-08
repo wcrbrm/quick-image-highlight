@@ -153,15 +153,16 @@ object CurrentImage {
      
   }
 
+  var imageView: Option[ImageView] = None
+  def updateCanvas = {
+    imageView.get.image = SwingFXUtils.toFXImage(bufferedImage.get, null) 
+  }
+
   def getImageView: ImageView = {
     if (bufferedImage.isDefined) {
 
-      // val g2d:Graphics2D = bufferedImage.get.createGraphics
-      // g2d.fillRect(0, 0, 200, 200)
-
-      new ImageView { 
+      imageView = Some(new ImageView { 
         image = SwingFXUtils.toFXImage(bufferedImage.get, null) 
-      
         onMouseClicked = new EventHandler[MouseEvent] {
 	        override def handle(event: MouseEvent) {
             if (startPoint.isDefined) {
@@ -171,11 +172,12 @@ object CurrentImage {
               startPoint = Some(new Point2D(event.getX, event.getY))
               println("startPoint = ", startPoint.toString)
             }
-            onUpdate()
+            updateCanvas
 	        }
 	      }
-      }
+      })
 
+      imageView.get
     } else {
       ContentNoImage.getImageView
     }
