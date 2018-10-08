@@ -163,6 +163,29 @@ object CurrentImage {
 
       imageView = Some(new ImageView { 
         image = SwingFXUtils.toFXImage(bufferedImage.get, null) 
+        onMouseMoved = new EventHandler[MouseEvent] {
+          override def handle(event: MouseEvent) {
+            if (startPoint.isDefined) {
+              val from:Point2D = startPoint.get
+              val to:Point2D = new Point2D(event.getX, event.getY)
+              
+              val b = new BufferedImage(bufferedImage.get.getWidth, bufferedImage.get.getHeight, bufferedImage.get.getType)
+              val g = b.createGraphics
+              g.drawImage(bufferedImage.get, 0, 0, null)
+
+              g.setColor(java.awt.Color.GRAY);
+              g.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, Array[Float](4), 0))
+              if (mode == "CROP" || mode == "BOX") {
+                g.drawRect(from.getX.toInt, from.getY.toInt, to.getX.toInt - from.getX.toInt + 1, to.getY.toInt - from.getY.toInt + 1)
+              } else {
+                g.drawLine(from.getX.toInt, from.getY.toInt, to.getX.toInt, to.getY.toInt)
+              }
+              g.dispose
+
+              imageView.get.image = SwingFXUtils.toFXImage(b, null) 
+            } 
+          }
+        }
         onMouseClicked = new EventHandler[MouseEvent] {
 	        override def handle(event: MouseEvent) {
             if (startPoint.isDefined) {
