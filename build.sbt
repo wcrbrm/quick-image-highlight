@@ -2,7 +2,7 @@
 name := "Quick Image Highlight"
 
 // Project version
-version := "8.0.144-R12"
+version := "0.1.0"
 
 // Version of Scala used by the project
 scalaVersion := "2.12.4"
