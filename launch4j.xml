@@ -2,8 +2,8 @@
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>D:\src\com.webcerebrium\quick-image-highlight\target\scala-2.12\Quick Image Highlight.jar</jar>
-  <outfile>D:\src\com.webcerebrium\quick-image-highlight\target\scala-2.12\Quick Image Highlight.exe</outfile>
+  <jar>D:\src\com.webcerebrium\quick-image-highlight\target\scala-2.12\Quick Image Highlight-assembly-0.1.0.jar</jar>
+  <outfile>D:\src\com.webcerebrium\quick-image-highlight\target\scala-2.12\QuickImageHighlight-v0.1.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -13,10 +13,8 @@
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon></icon>
-  <var>
-     TESTENV=1
-  </var>
+  <icon>D:\src\com.webcerebrium\quick-image-highlight\src\main\resources\favicon.ico</icon>
+  <var>TESTENV=1</var>
   <singleInstance>
     <mutexName>QuickImageHighlight</mutexName>
     <windowTitle>Quick Image Highlight</windowTitle>
@@ -41,12 +39,7 @@
     <companyName>Web Cerebrium</companyName>
     <internalName>Quick Image Highlight</internalName>
     <originalFilename>QuickImageHighlight.exe</originalFilename>
+    <trademarks></trademarks>
+    <language>ENGLISH_US</language>
   </versionInfo>
-  <messages>
-    <startupErr>An error occurred while starting the application.</startupErr>
-    <bundledJreErr>This application was configured to use a bundled Java Runtime Environment but the runtime is missing or corrupted.</bundledJreErr>
-    <jreVersionErr>This application requires a Java Runtime Environment</jreVersionErr>
-    <launcherErr>The registry refers to a nonexistent Java Runtime Environment installation or the runtime is corrupted.</launcherErr>
-    <instanceAlreadyExistsMsg>An application instance is already running.</instanceAlreadyExistsMsg>
-  </messages>
 </launch4jConfig>
