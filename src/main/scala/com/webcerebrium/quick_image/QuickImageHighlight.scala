@@ -22,11 +22,15 @@ object QuickImageHighlight extends JFXApp {
 
   def updateViews = {
     this.stage.title = if (CurrentImage.bufferedImage.isDefined) "Highlight the most important" else "Please Select Image"
+    CurrentImage.startPoint = None
     borderPane.top = topPanel.get
     borderPane.center = CurrentImage.get
   }
 
-  CurrentImage.onUpdate = () => { borderPane.center = CurrentImage.get }
+  CurrentImage.onUpdate = () => { 
+    CurrentImage.startPoint = None
+    borderPane.center = CurrentImage.get 
+  }
   val topPanel:TopPanel = new TopPanel(
      onUpdate = () => updateViews,
      onUpdateMode = (mode: String) => { CurrentImage.mode = mode; println("mode updated " + mode) }

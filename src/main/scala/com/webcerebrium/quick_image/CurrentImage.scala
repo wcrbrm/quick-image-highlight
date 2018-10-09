@@ -190,7 +190,7 @@ object CurrentImage {
 	        override def handle(event: MouseEvent) {
             if (startPoint.isDefined) {
               applyTool(startPoint.get, new Point2D(event.getX, event.getY))
-              startPoint = None;
+              startPoint = None
             } else {
               startPoint = Some(new Point2D(event.getX, event.getY))
               println("startPoint = ", startPoint.toString)
