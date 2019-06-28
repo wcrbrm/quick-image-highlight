@@ -15,6 +15,7 @@ import java.awt.{Toolkit}
 import java.awt.datatransfer.{ Clipboard, DataFlavor, UnsupportedFlavorException }
 
 import java.io.File
+import java.nio.file.{Files, Paths}
 import javafx.scene.{control => jfxsc, text => jfxst}
 import javafx.scene.control.{ToggleButton => JfxToggleBtn}
 import javafx.{scene => jfxs}
@@ -35,7 +36,7 @@ case class ModeText(value: String) extends Label(value) {
 
 case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with ImageChoser {
 
-  val btnPaste = new Button("From Clipboard") { 
+  val btnPaste = new Button("Clipboard") { 
     graphic = new ImageView {image = new Image(this, "/paste.png")}
     onAction = handle { 
         CurrentImage.fromClipboard 
@@ -43,7 +44,45 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
     }
   }
 
-  val btnOpenDialog = new Button("From Local File") {
+  def hasPicturesFolder: Boolean = {
+    val userFolder = System.getProperty("user.home")
+    val dir = userFolder + "/Pictures"
+    val d = new File(dir)
+    d.exists && d.isDirectory
+  }
+
+  def getLatestFileInPictures: Option[File] = {
+    val userFolder = System.getProperty("user.home")
+    val dir = userFolder + "/Pictures"
+    val d = new File(dir)
+    val files = d.listFiles.filter(_.isFile).toList
+      .sortWith((f1: File, f2: File) => {
+        if (f1.lastModified - f2.lastModified > 0) true else false
+      })
+    println(files.length + " total files in " + dir)
+    if (files.length > 0) Some(files.head) else None
+  }
+
+  val optBtnOpenPictures: Option[Button] = if (!hasPicturesFolder) {
+    println("Warning: User Pictures folder not found, disabling this feature")
+    None
+  } else {
+    Some(new Button("Pictures") {
+      graphic = new ImageView {image = new Image(this, "/open-folder.png")}
+      onAction = handle {
+        val optFile = getLatestFileInPictures
+        if (optFile.isDefined) {
+          println("picking " + optFile.get.toString)
+          CurrentImage.fromFile(optFile.get)
+          onUpdate()
+        } else {
+          println("File not selected")
+        }
+      }
+    })
+  }  
+
+  val btnOpenDialog = new Button("Local File") {
     graphic = new ImageView {image = new Image(this, "/open-folder.png")}
     onAction = handle {
       val imageFile: Option[File] = selectImage("Please select local image")
@@ -59,18 +98,20 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
   def getButtonByName(name: String): Option[Button] = {
     if (name == "PASTE") {
       Some(btnPaste)
+    } else if (name == "PICTURES") {
+      optBtnOpenPictures
     } else if (name == "OPEN") {
       Some(btnOpenDialog)
     } else {
       None
     }
   }
-  
+
   override def get = new BorderPane {
     style = "-fx-background-color: #eee"
     padding = Insets(10, 10, 10, 10)
     center = new HBox {
-        children = List( btnOpenDialog, btnPaste )
+        children = List(optBtnOpenPictures).flatten[Button] ::: List(btnOpenDialog, btnPaste)
     }
   }
 }
