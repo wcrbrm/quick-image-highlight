@@ -51,14 +51,25 @@ object CurrentImage {
     }
   }
 
+  def rmAlpha(img: BufferedImage): BufferedImage = {
+    val copy = new BufferedImage(
+      img.getWidth, img.getHeight, BufferedImage.TYPE_INT_RGB);
+    val g2d = copy.createGraphics
+    g2d.setColor(java.awt.Color.BLACK)
+    g2d.fillRect(0, 0, copy.getWidth, copy.getHeight)
+    g2d.drawImage(img, 0, 0, null)
+    g2d.dispose
+    copy
+  }
+
   def reset = { bufferedImage = None }
   def isPresent = bufferedImage.isDefined
-  def save(f: File) = { 
-    bufferedImage.map(bim => ImageIO.write(bim, "jpg", f)) 
+  def save(f: File) = {
+    bufferedImage.map(rmAlpha).map(bim => ImageIO.write(bim, "jpg", f)) 
   }
 
   def upload(sftp: SSHFtp, remoteDestination: String) = {
-    bufferedImage.map(bim => {
+    bufferedImage.map(rmAlpha).map(bim => {
       val writer: ImageWriter = ImageIO.getImageWritersByFormatName("png").next
       val param:ImageWriteParam = writer.getDefaultWriteParam
       // param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT)
