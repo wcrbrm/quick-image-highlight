@@ -140,8 +140,11 @@ case class TopPanelWithImage(onUpdate: () => Unit, onUpdateMode: (String) => Uni
     onAction = handle { 
       val imageFile: Option[File] = exportedImage("Save as...")
       if (imageFile.isDefined) {
-        CurrentImage.save(imageFile.get)
-        println("Consider All Saved") 
+        val originalFn = imageFile.get.toString.toLowerCase
+        val isJpegExtensionAlready = originalFn.endsWith(".jpg") || originalFn.endsWith(".jpeg")
+        val fileDest: File = if (isJpegExtensionAlready) imageFile.get else new File(imageFile.get.toString + ".jpg")
+        CurrentImage.save(fileDest)
+        println("Consider All Saved to " + fileDest.toString) 
       } else {
         println("Exported file not selected") 
       }
