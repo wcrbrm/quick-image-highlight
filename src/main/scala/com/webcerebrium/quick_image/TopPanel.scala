@@ -1,5 +1,6 @@
 package com.webcerebrium.quick_image
 
+import scala.io.Source
 import scalafx.geometry.{ Insets, Pos }
 import scalafx.scene.paint.Color._
 import scalafx.scene.paint._
@@ -44,17 +45,28 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
     }
   }
 
-  def hasPicturesFolder: Boolean = {
+  def getGnomeFolder(f: File, varName: string, homeDir: string): Option[File] {
+    val source = Source.fromFile(file)
+    val result = for (line <- source.getLines) {
+      if line.startsWith(varName + "=") {
+        Some(line.replace("$HOME", homeDir).replaceAll("\"", "").replace(varName + "="))
+      } else None
+    }.flatten.first
+    source.close
+    Some(result)
+  }
+
+  def getPicturesFolder: Option[File] = {
     val userFolder = System.getProperty("user.home")
-    val dir = userFolder + "/Pictures"
-    val d = new File(dir)
-    d.exists && d.isDirectory
+    val dGnomeDir = getGnomeFolder(new File(userFolder +"/.config/user-dirs.dirs"), "XDG_PICTURES_DIR", userFolder)
+    val defaultDir = new File(userFolder + "/Pictures")
+    if (dGnomeDir.isDefined) dGnomeDir else {
+      if defaultDir.exists && defaultDir.isDirectory Some(d) else None
+    }
   }
 
   def getLatestFileInPictures: Option[File] = {
-    val userFolder = System.getProperty("user.home")
-    val dir = userFolder + "/Pictures"
-    val d = new File(dir)
+    val d = getPicturesFolder.get
     val files = d.listFiles.filter(_.isFile).toList
       .sortWith((f1: File, f2: File) => {
         if (f1.lastModified - f2.lastModified > 0) true else false
@@ -63,7 +75,7 @@ case class TopPanelNoImage(onUpdate: () => Unit) extends TopPanelTrait with Imag
     if (files.length > 0) Some(files.head) else None
   }
 
-  val optBtnOpenPictures: Option[Button] = if (!hasPicturesFolder) {
+  val optBtnOpenPictures: Option[Button] = if (!getPicturesFolder.isDefined) {
     println("Warning: User Pictures folder not found, disabling this feature")
     None
   } else {
