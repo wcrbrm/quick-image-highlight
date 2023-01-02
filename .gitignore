@@ -18,3 +18,8 @@ project/plugins/project/
 
 /.idea/
 /project/project
+
+
+# Added by cargo
+
+/target
