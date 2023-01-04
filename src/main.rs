@@ -7,7 +7,20 @@ use state::*;
 use std::sync::{Arc, Mutex};
 use winit::event::{ElementState, Event, KeyboardInput, ModifiersState, MouseButton, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
-use winit::window::{WindowBuilder, WindowLevel};
+use winit::window::{Icon, WindowBuilder, WindowLevel};
+
+fn load_icon() -> Option<Icon> {
+    let (icon_rgba, icon_width, icon_height) = {
+        let buf = include_bytes!("../public/favicon.png");
+        let image = image::load_from_memory_with_format(buf, image::ImageFormat::Png)
+            .expect("Failed load window icon")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+    Some(Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon"))
+}
 
 fn main() {
     let scale = 1 as usize;
@@ -16,12 +29,14 @@ fn main() {
     let sz = height / scale as u32;
     let pad = 20u32;
     let top_bar_height = 40;
-    let screen_size = (1920, 1080);
+    let screen_size = (1920, 1080); // can be detected from the active monitor
     let title = "Quick Image Highlighter";
     let inner_size = winit::dpi::PhysicalSize::new(sz, sz);
 
     let window = WindowBuilder::new()
         .with_title(title)
+        .with_window_icon(load_icon())
+        .with_window_level(WindowLevel::Normal)
         .with_inner_size(inner_size)
         .with_resizable(true)
         .with_transparent(false)
@@ -32,8 +47,6 @@ fn main() {
         .build(&event_loop)
         .unwrap();
     let wid = window.id();
-    window.set_window_level(WindowLevel::AlwaysOnTop);
-
     let app_state = match exchange::from_last_picture() {
         Some(im) => AppState {
             img: Some(im),
