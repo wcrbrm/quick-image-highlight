@@ -179,6 +179,9 @@ impl AppState {
                             let yy2 = std::cmp::max(y, y2);
                             let im = crate::transform::cropped(img, *xx1, *yy1, *xx2, *yy2);
                             self.img = Some(im);
+                            self.draw_state = DrawState::ImageIsReady {
+                                ready: Readiness::ToCrop,
+                            };
                             return true;
                         }
                     }
