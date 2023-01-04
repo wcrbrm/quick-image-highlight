@@ -1,4 +1,5 @@
-use crate::*;
+use crate::state::*;
+
 use image::GenericImageView;
 use softbuffer::{Context, Surface};
 use std::cell::RefCell;
