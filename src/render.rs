@@ -8,21 +8,42 @@ use std::mem::ManuallyDrop;
 use std::num::NonZeroU32;
 use winit::window::{Window, WindowId};
 
-fn draw_rectangle(buffer: &mut Buffer, sz_width: u32, x1: u32, y1: u32, x2: u32, y2: u32) {
+fn draw_rectangle(
+    buffer: &mut Buffer,
+    sz_width: u32,
+    x1: u32,
+    y1: u32,
+    x2: u32,
+    y2: u32,
+    color: u32,
+) {
     let x = std::cmp::min(x1, x2);
     let y = std::cmp::min(y1, y2);
     let w = std::cmp::max(x1, x2) - x;
     let h = std::cmp::max(y1, y2) - y;
     // draw crop rectangle
     for i in 0..h {
-        let color = 0xFFFF00FF;
         buffer[((y + i) * sz_width + x) as usize] = color;
         buffer[((y + i) * sz_width + x + w) as usize] = color;
     }
     for i in 0..w {
-        let color = 0xFF0000FF;
         buffer[(y * sz_width + x + i) as usize] = color;
         buffer[((y + h) * sz_width + x + i) as usize] = color;
+    }
+}
+
+fn draw_line(buffer: &mut Buffer, sz_width: u32, x1: u32, y1: u32, x2: u32, y2: u32, color: u32) {
+    let length = ((x2 as i32 - x1 as i32).pow(2) + (y2 as i32 - y1 as i32).pow(2)) as u32;
+    let dx = (x2 as f32 - x1 as f32) / length as f32;
+    let dy = (y2 as f32 - y1 as f32) / length as f32;
+    let mut x = x1 as f32;
+    let mut y = y1 as f32;
+    let mut counter = 0;
+    while counter < length {
+        buffer[(y as i32 * sz_width as i32 + x as i32) as usize] = color;
+        x += dx;
+        y += dy;
+        counter += 1;
     }
 }
 
@@ -108,10 +129,22 @@ pub fn draw(window: &Window, state: &AppState) {
                 DrawState::NoImage => {}
                 DrawState::CropStarted { x, y, m } => {
                     if let Some((x2, y2)) = m {
-                        draw_rectangle(&mut buffer, size.width, *x, *y, *x2, *y2);
+                        let color: u32 = 0xFFFF8000;
+                        draw_rectangle(&mut buffer, size.width, *x, *y, *x2, *y2, color);
                     }
                 }
-
+                DrawState::ArrowStarted { x, y, m } => {
+                    if let Some((x2, y2)) = m {
+                        let color: u32 = 0xFFFF8000;
+                        draw_line(&mut buffer, size.width, *x, *y, *x2, *y2, color);
+                    }
+                }
+                DrawState::LineStarted { x, y, m } => {
+                    if let Some((x2, y2)) = m {
+                        let color: u32 = 0xFFFF3000;
+                        draw_line(&mut buffer, size.width, *x, *y, *x2, *y2, color);
+                    }
+                }
                 _ => {}
             };
         }

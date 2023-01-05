@@ -77,11 +77,34 @@ impl AppState {
     /// returns true if the window needs to be redrawn
     pub fn on_keypress(&mut self, key: VirtualKeyCode, modifiers: ModifiersState) -> bool {
         match key {
-            VirtualKeyCode::Escape => {
-                self.draw_state = DrawState::NoImage;
-                self.img = None;
-                return true;
-            }
+            VirtualKeyCode::Escape => match &self.draw_state {
+                DrawState::NoImage => {
+                    return false;
+                }
+                DrawState::ImageIsReady { .. } => {
+                    self.draw_state = DrawState::NoImage;
+                    self.img = None;
+                    return true;
+                }
+                DrawState::CropStarted { .. } => {
+                    self.draw_state = DrawState::ImageIsReady {
+                        ready: Readiness::ToCrop,
+                    };
+                    return true;
+                }
+                DrawState::ArrowStarted { .. } => {
+                    self.draw_state = DrawState::ImageIsReady {
+                        ready: Readiness::ToDrawArrow,
+                    };
+                    return true;
+                }
+                DrawState::LineStarted { .. } => {
+                    self.draw_state = DrawState::ImageIsReady {
+                        ready: Readiness::ToDrawLine,
+                    };
+                    return true;
+                }
+            },
             VirtualKeyCode::L => {
                 if modifiers.ctrl() {
                     self.img = crate::exchange::from_last_picture();
@@ -187,12 +210,26 @@ impl AppState {
                     }
                 }
                 DrawState::ArrowStarted { x, y, m } => {
-                    let _ = (x, y, m);
-                    // TODO: replace image with a new, draw an arrow
+                    if let Some(img) = &self.img {
+                        if let Some(m) = m {
+                            self.img = Some(crate::transform::with_line(&img, *x, *y, m.0, m.1));
+                            self.draw_state = DrawState::ImageIsReady {
+                                ready: Readiness::ToDrawArrow,
+                            };
+                            return true;
+                        }
+                    }
                 }
                 DrawState::LineStarted { x, y, m } => {
-                    let _ = (x, y, m);
-                    // TODO: replace image with a new, draw a line
+                    if let Some(img) = &self.img {
+                        if let Some(m) = m {
+                            self.img = Some(crate::transform::with_line(&img, *x, *y, m.0, m.1));
+                            self.draw_state = DrawState::ImageIsReady {
+                                ready: Readiness::ToDrawLine,
+                            };
+                            return true;
+                        }
+                    }
                 }
                 _ => {}
             }
