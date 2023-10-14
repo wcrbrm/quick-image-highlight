@@ -76,3 +76,12 @@ pub fn to_clipboard(im: &DynamicImage) -> anyhow::Result<()> {
     clipboard.set_image(img_data)?;
     Ok(())
 }
+
+/// save image as the PNG file - in the pictures directory
+pub fn to_last_picture(im: &DynamicImage) -> anyhow::Result<()> {
+    let img_dir = dirs::picture_dir().ok_or_else(|| anyhow::anyhow!("no picture directory"))?;
+    let now = chrono::Local::now().format("%Y%m%d-%H%M%S");
+    let path = img_dir.join(format!("img-{}.jpg", now));
+    im.save_with_format(path, image::ImageFormat::Jpeg)?;
+    Ok(())
+}

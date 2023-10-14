@@ -105,6 +105,16 @@ impl AppState {
                     return true;
                 }
             },
+            VirtualKeyCode::S => {
+                if let Some(img) = &self.img {
+                    if let Ok(_) = crate::exchange::to_last_picture(img) {
+                        self.img = None;
+                        self.draw_state = DrawState::NoImage;
+                        return true;
+                    }
+                }
+                return false;
+            }
             VirtualKeyCode::L => {
                 if modifiers.ctrl() {
                     self.img = crate::exchange::from_last_picture();
